@@ -17,11 +17,38 @@ export interface SoundCloudRoutesConfig {
   clientId: string;
   /** OAuth client secret */
   clientSecret: string;
+  /** OAuth redirect URI (required for authentication features) */
+  redirectUri?: string;
+}
+
+/** Token returned from SoundCloud OAuth. */
+export interface SoundCloudToken {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  scope: string;
+}
+
+/** Auth state for the client context. */
+export interface AuthState {
+  user: import("soundcloud-api-ts").SoundCloudUser | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  isAuthenticated: boolean;
+  expiresAt: number | null;
 }
 
 /** Standard hook return shape. */
 export interface HookResult<T> {
   data: T | null;
+  loading: boolean;
+  error: Error | null;
+}
+
+/** Mutation hook return shape. */
+export interface MutationResult<TArgs extends any[] = []> {
+  execute: (...args: TArgs) => Promise<void>;
   loading: boolean;
   error: Error | null;
 }

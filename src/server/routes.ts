@@ -18,6 +18,31 @@ import {
   searchUsers,
   searchPlaylists,
   scFetchUrl,
+  // Auth
+  getAuthorizationUrl,
+  generateCodeVerifier,
+  generateCodeChallenge,
+  getUserToken,
+  refreshUserToken,
+  signOut,
+  // Me
+  getMe,
+  getMeTracks,
+  getMeLikesTracks,
+  getMePlaylists,
+  getMeFollowings,
+  getMeFollowers,
+  // Actions
+  followUser,
+  unfollowUser,
+  likeTrack,
+  unlikeTrack,
+  likePlaylist,
+  unlikePlaylist,
+  repostTrack,
+  unrepostTrack,
+  repostPlaylist,
+  unrepostPlaylist,
 } from "soundcloud-api-ts";
 import type { SoundCloudRoutesConfig } from "../types.js";
 
@@ -32,6 +57,17 @@ const ctx: RouteContext = {
   token: undefined,
   tokenExpiry: 0,
 };
+
+// In-memory PKCE verifier store (state → verifier)
+const pkceStore = new Map<string, { verifier: string; createdAt: number }>();
+
+// Clean up old entries every 10 minutes
+function cleanPkceStore() {
+  const now = Date.now();
+  for (const [key, val] of pkceStore) {
+    if (now - val.createdAt > 600_000) pkceStore.delete(key);
+  }
+}
 
 async function ensureToken(): Promise<string> {
   if (ctx.token && Date.now() < ctx.tokenExpiry) return ctx.token;
@@ -53,7 +89,201 @@ function errorResponse(message: string, status: number): Response {
   return jsonResponse({ error: message }, status);
 }
 
-async function handleRoute(pathname: string, url: URL): Promise<Response> {
+function getUserTokenFromHeaders(headers: Headers): string | null {
+  const auth = headers.get("authorization");
+  if (auth?.startsWith("Bearer ")) return auth.slice(7);
+  return null;
+}
+
+async function handleRoute(
+  pathname: string,
+  url: URL,
+  method: string = "GET",
+  headers: Headers = new Headers(),
+  body?: any,
+): Promise<Response> {
+  // ── Auth routes ──
+
+  // GET /auth/login
+  if (pathname === "/auth/login" && method === "GET") {
+    if (!ctx.config.redirectUri) {
+      return errorResponse("redirectUri not configured", 500);
+    }
+    cleanPkceStore();
+    const verifier = generateCodeVerifier();
+    const challenge = await generateCodeChallenge(verifier);
+    const state = crypto.randomUUID();
+    pkceStore.set(state, { verifier, createdAt: Date.now() });
+    const authUrl = getAuthorizationUrl(ctx.config.clientId, ctx.config.redirectUri, {
+      state,
+      codeChallenge: challenge,
+    });
+    return jsonResponse({ url: authUrl, state });
+  }
+
+  // GET /auth/callback?code=...&state=...
+  if (pathname === "/auth/callback" && method === "GET") {
+    if (!ctx.config.redirectUri) {
+      return errorResponse("redirectUri not configured", 500);
+    }
+    const code = url.searchParams.get("code");
+    const state = url.searchParams.get("state");
+    if (!code || !state) return errorResponse("Missing code or state parameter", 400);
+    const entry = pkceStore.get(state);
+    if (!entry) return errorResponse("Invalid or expired state", 400);
+    pkceStore.delete(state);
+    const tokens = await getUserToken(
+      ctx.config.clientId,
+      ctx.config.clientSecret,
+      ctx.config.redirectUri,
+      code,
+      entry.verifier,
+    );
+    return jsonResponse(tokens);
+  }
+
+  // POST /auth/refresh
+  if (pathname === "/auth/refresh" && method === "POST") {
+    if (!ctx.config.redirectUri) {
+      return errorResponse("redirectUri not configured", 500);
+    }
+    const refreshTokenValue = body?.refresh_token;
+    if (!refreshTokenValue) return errorResponse("Missing refresh_token", 400);
+    const tokens = await refreshUserToken(
+      ctx.config.clientId,
+      ctx.config.clientSecret,
+      ctx.config.redirectUri,
+      refreshTokenValue,
+    );
+    return jsonResponse(tokens);
+  }
+
+  // POST /auth/logout
+  if (pathname === "/auth/logout" && method === "POST") {
+    const accessTokenValue = body?.access_token;
+    if (accessTokenValue) {
+      try {
+        await signOut(accessTokenValue);
+      } catch {
+        // best effort
+      }
+    }
+    return jsonResponse({ success: true });
+  }
+
+  // ── Authenticated "me" routes ──
+  const userToken = getUserTokenFromHeaders(headers);
+
+  // GET /me
+  if (pathname === "/me" && method === "GET") {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const result = await getMe(userToken);
+    return jsonResponse(result);
+  }
+
+  // GET /me/tracks
+  if (pathname === "/me/tracks" && method === "GET") {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const result = await getMeTracks(userToken);
+    return jsonResponse(result);
+  }
+
+  // GET /me/likes
+  if (pathname === "/me/likes" && method === "GET") {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const result = await getMeLikesTracks(userToken);
+    return jsonResponse(result);
+  }
+
+  // GET /me/playlists
+  if (pathname === "/me/playlists" && method === "GET") {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const result = await getMePlaylists(userToken);
+    return jsonResponse(result);
+  }
+
+  // GET /me/followings
+  if (pathname === "/me/followings" && method === "GET") {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const result = await getMeFollowings(userToken);
+    return jsonResponse(result);
+  }
+
+  // GET /me/followers
+  if (pathname === "/me/followers" && method === "GET") {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const result = await getMeFollowers(userToken);
+    return jsonResponse(result);
+  }
+
+  // ── Action routes (POST/DELETE) ──
+
+  // POST|DELETE /me/follow/:userId
+  const followMatch = pathname.match(/^\/me\/follow\/([^/]+)$/);
+  if (followMatch && (method === "POST" || method === "DELETE")) {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const userId = followMatch[1];
+    if (method === "POST") {
+      await followUser(userToken, userId);
+    } else {
+      await unfollowUser(userToken, userId);
+    }
+    return jsonResponse({ success: true });
+  }
+
+  // POST|DELETE /tracks/:id/like
+  const trackLikeActionMatch = pathname.match(/^\/tracks\/([^/]+)\/like$/);
+  if (trackLikeActionMatch && (method === "POST" || method === "DELETE")) {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const trackId = trackLikeActionMatch[1];
+    if (method === "POST") {
+      await likeTrack(userToken, trackId);
+    } else {
+      await unlikeTrack(userToken, trackId);
+    }
+    return jsonResponse({ success: true });
+  }
+
+  // POST|DELETE /tracks/:id/repost
+  const trackRepostMatch = pathname.match(/^\/tracks\/([^/]+)\/repost$/);
+  if (trackRepostMatch && (method === "POST" || method === "DELETE")) {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const trackId = trackRepostMatch[1];
+    if (method === "POST") {
+      await repostTrack(userToken, trackId);
+    } else {
+      await unrepostTrack(userToken, trackId);
+    }
+    return jsonResponse({ success: true });
+  }
+
+  // POST|DELETE /playlists/:id/like
+  const playlistLikeMatch = pathname.match(/^\/playlists\/([^/]+)\/like$/);
+  if (playlistLikeMatch && (method === "POST" || method === "DELETE")) {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const playlistId = playlistLikeMatch[1];
+    if (method === "POST") {
+      await likePlaylist(userToken, playlistId);
+    } else {
+      await unlikePlaylist(userToken, playlistId);
+    }
+    return jsonResponse({ success: true });
+  }
+
+  // POST|DELETE /playlists/:id/repost
+  const playlistRepostMatch = pathname.match(/^\/playlists\/([^/]+)\/repost$/);
+  if (playlistRepostMatch && (method === "POST" || method === "DELETE")) {
+    if (!userToken) return errorResponse("Authorization required", 401);
+    const playlistId = playlistRepostMatch[1];
+    if (method === "POST") {
+      await repostPlaylist(userToken, playlistId);
+    } else {
+      await unrepostPlaylist(userToken, playlistId);
+    }
+    return jsonResponse({ success: true });
+  }
+
+  // ── Public routes (use client credentials token) ──
   const token = await ensureToken();
 
   // /next?url=<encoded_next_href> — generic next-page fetcher
@@ -266,18 +496,29 @@ export function createSoundCloudRoutes(config: SoundCloudRoutesConfig) {
      * Mount at `app/api/soundcloud/[...route]/route.ts`
      */
     handler() {
-      return async (request: Request): Promise<Response> => {
+      const handle = async (request: Request): Promise<Response> => {
         try {
           const url = new URL(request.url);
           // Extract the route portion after /api/soundcloud
           const match = url.pathname.match(/\/api\/soundcloud(\/.*)/);
           const route = match ? match[1] : url.pathname;
-          return await handleRoute(route, url);
+
+          let body: any = undefined;
+          if (request.method === "POST" || request.method === "PUT" || request.method === "PATCH") {
+            try {
+              body = await request.json();
+            } catch {
+              body = undefined;
+            }
+          }
+
+          return await handleRoute(route, url, request.method, request.headers, body);
         } catch (err: any) {
           const status = err?.statusCode ?? 500;
           return errorResponse(err?.message ?? "Internal server error", status);
         }
       };
+      return handle;
     },
 
     /**
@@ -295,7 +536,12 @@ export function createSoundCloudRoutes(config: SoundCloudRoutesConfig) {
           const host = req.headers.host || "localhost";
           const url = new URL(`${protocol}://${host}${req.url}`);
 
-          const response = await handleRoute(route, url);
+          const headers = new Headers();
+          if (req.headers.authorization) {
+            headers.set("authorization", req.headers.authorization);
+          }
+
+          const response = await handleRoute(route, url, req.method || "GET", headers, req.body);
           const body = await response.json();
           res.status(response.status).json(body);
         } catch (err: any) {
