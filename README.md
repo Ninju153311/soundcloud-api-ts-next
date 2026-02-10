@@ -1,38 +1,56 @@
 # soundcloud-api-ts-next
 
-React hooks and Next.js API route handlers for the SoundCloud API. Client secrets stay on the server.
+Next.js integration for [soundcloud-api-ts](https://github.com/twin-paws/soundcloud-api-ts) — React hooks + secure API route handlers.
 
-Built on top of [`soundcloud-api-ts`](https://github.com/twin-paws/soundcloud-api-ts).
-
-## Install
+## Installation
 
 ```bash
-pnpm add soundcloud-api-ts-next soundcloud-api-ts
+npm install soundcloud-api-ts-next
+# or
+pnpm add soundcloud-api-ts-next
 ```
 
-## Quick Start
+## Setup
 
-### 1. Set up the API route (App Router)
+### 1. Server Routes
+
+Create an API route handler that proxies SoundCloud requests (keeps your credentials server-side).
+
+**App Router** (`app/api/soundcloud/[...route]/route.ts`):
 
 ```ts
-// app/api/soundcloud/[...route]/route.ts
 import { createSoundCloudRoutes } from "soundcloud-api-ts-next/server";
 
 const sc = createSoundCloudRoutes({
-  clientId: process.env.SC_CLIENT_ID!,
-  clientSecret: process.env.SC_CLIENT_SECRET!,
+  clientId: process.env.SOUNDCLOUD_CLIENT_ID!,
+  clientSecret: process.env.SOUNDCLOUD_CLIENT_SECRET!,
 });
 
-export const GET = sc.handler();
+const handler = sc.handler();
+export const GET = handler;
 ```
 
-### 2. Wrap your app with the provider
+**Pages Router** (`pages/api/soundcloud/[...route].ts`):
+
+```ts
+import { createSoundCloudRoutes } from "soundcloud-api-ts-next/server";
+
+const sc = createSoundCloudRoutes({
+  clientId: process.env.SOUNDCLOUD_CLIENT_ID!,
+  clientSecret: process.env.SOUNDCLOUD_CLIENT_SECRET!,
+});
+
+export default sc.pagesHandler();
+```
+
+### 2. Client Provider
+
+Wrap your app with the `SoundCloudProvider`:
 
 ```tsx
-// app/layout.tsx
 import { SoundCloudProvider } from "soundcloud-api-ts-next";
 
-export default function RootLayout({ children }) {
+export default function Layout({ children }) {
   return (
     <SoundCloudProvider apiPrefix="/api/soundcloud">
       {children}
@@ -41,93 +59,99 @@ export default function RootLayout({ children }) {
 }
 ```
 
-### 3. Use hooks in your components
-
-```tsx
-"use client";
-import { useTrackSearch } from "soundcloud-api-ts-next";
-
-export function Search() {
-  const { data, loading, error } = useTrackSearch("lofi beats", { limit: 10 });
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error.message}</p>;
-
-  return (
-    <ul>
-      {data?.map((track) => (
-        <li key={track.id}>{track.title}</li>
-      ))}
-    </ul>
-  );
-}
-```
-
-## Pages Router Setup
-
-```ts
-// pages/api/soundcloud/[...route].ts
-import { createSoundCloudRoutes } from "soundcloud-api-ts-next/server";
-
-const sc = createSoundCloudRoutes({
-  clientId: process.env.SC_CLIENT_ID!,
-  clientSecret: process.env.SC_CLIENT_SECRET!,
-});
-
-export default sc.pagesHandler();
-```
-
 ## Hooks
 
-### `useTrackSearch(query: string, options?: { limit?: number })`
+All hooks return `{ data, loading, error }`.
 
-Search for tracks. Returns `{ data: SoundCloudTrack[] | null, loading, error }`.
+### Tracks
 
-### `useTrack(trackId: string | number)`
+| Hook | Arguments | Description |
+|------|-----------|-------------|
+| `useTrack(trackId)` | `string \| number \| undefined` | Fetch a single track |
+| `useTrackSearch(query, options?)` | `string`, `{ limit? }` | Search tracks |
+| `useTrackComments(trackId)` | `string \| number \| undefined` | Get track comments |
+| `useTrackLikes(trackId)` | `string \| number \| undefined` | Get users who liked a track |
+| `useRelatedTracks(trackId)` | `string \| number \| undefined` | Get related tracks |
 
-Fetch a single track by ID. Returns `{ data: SoundCloudTrack | null, loading, error }`.
+### Users
 
-### `useUser(userId: string | number)`
+| Hook | Arguments | Description |
+|------|-----------|-------------|
+| `useUser(userId)` | `string \| number \| undefined` | Fetch a single user |
+| `useUserSearch(query)` | `string` | Search users |
+| `useUserTracks(userId)` | `string \| number \| undefined` | Get a user's tracks |
+| `useUserPlaylists(userId)` | `string \| number \| undefined` | Get a user's playlists |
+| `useUserLikes(userId)` | `string \| number \| undefined` | Get a user's liked tracks |
+| `useUserFollowers(userId)` | `string \| number \| undefined` | Get a user's followers |
+| `useUserFollowings(userId)` | `string \| number \| undefined` | Get a user's followings |
 
-Fetch a single user by ID. Returns `{ data: SoundCloudUser | null, loading, error }`.
+### Playlists
 
-### `usePlayer(trackId: string | number)`
+| Hook | Arguments | Description |
+|------|-----------|-------------|
+| `usePlaylist(playlistId)` | `string \| number \| undefined` | Fetch a single playlist |
+| `usePlaylistTracks(playlistId)` | `string \| number \| undefined` | Get tracks in a playlist |
+| `usePlaylistSearch(query)` | `string` | Search playlists |
 
-Manages an HTML5 Audio element for streaming. Returns:
+### Player
+
+| Hook | Arguments | Description |
+|------|-----------|-------------|
+| `usePlayer(streamUrl)` | `string \| undefined` | Audio player with play/pause/seek |
+
+## Server Routes
+
+All routes are available via the catch-all handler and as individual methods on the routes object.
+
+### Search
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `GET /search/tracks?q=...` | `searchTracks(q, page?)` | Search tracks |
+| `GET /search/users?q=...` | `searchUsers(q)` | Search users |
+| `GET /search/playlists?q=...` | `searchPlaylists(q)` | Search playlists |
+
+### Tracks
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `GET /tracks/:id` | `getTrack(id)` | Get track details |
+| `GET /tracks/:id/stream` | `getTrackStreams(id)` | Get stream URLs |
+| `GET /tracks/:id/comments` | `getTrackComments(id)` | Get track comments |
+| `GET /tracks/:id/likes` | `getTrackLikes(id)` | Get track likes |
+| `GET /tracks/:id/related` | `getRelatedTracks(id)` | Get related tracks |
+
+### Users
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `GET /users/:id` | `getUser(id)` | Get user details |
+| `GET /users/:id/tracks` | `getUserTracks(id, limit?)` | Get user's tracks |
+| `GET /users/:id/playlists` | `getUserPlaylists(id)` | Get user's playlists |
+| `GET /users/:id/likes/tracks` | `getUserLikesTracks(id)` | Get user's liked tracks |
+| `GET /users/:id/followers` | `getFollowers(id)` | Get user's followers |
+| `GET /users/:id/followings` | `getFollowings(id)` | Get user's followings |
+
+### Playlists
+
+| Route | Method | Description |
+|-------|--------|-------------|
+| `GET /playlists/:id` | `getPlaylist(id)` | Get playlist details |
+| `GET /playlists/:id/tracks` | `getPlaylistTracks(id)` | Get playlist tracks |
+
+## Types
+
+All SoundCloud types are re-exported from `soundcloud-api-ts`:
 
 ```ts
-{
-  playing: boolean;
-  progress: number;  // current time in seconds
-  duration: number;  // total duration in seconds
-  play(): void;
-  pause(): void;
-  toggle(): void;
-  seek(time: number): void;
-}
+import type {
+  SoundCloudTrack,
+  SoundCloudUser,
+  SoundCloudPlaylist,
+  SoundCloudComment,
+  SoundCloudStreams,
+} from "soundcloud-api-ts-next";
 ```
-
-## API Routes
-
-The server handler supports these routes:
-
-| Route | Description |
-|---|---|
-| `/search/tracks?q=...&page=...` | Search tracks |
-| `/tracks/:id` | Get track by ID |
-| `/tracks/:id/stream` | Get stream URLs for a track |
-| `/users/:id` | Get user by ID |
-| `/users/:id/tracks` | Get user's tracks |
-
-## Provider
-
-```tsx
-<SoundCloudProvider apiPrefix="/api/soundcloud">
-  {children}
-</SoundCloudProvider>
-```
-
-The `apiPrefix` prop configures where the hooks send requests. Default: `"/api/soundcloud"`.
 
 ## License
 

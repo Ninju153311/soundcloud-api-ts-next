@@ -6,6 +6,17 @@ import {
   getUser,
   getUserTracks,
   getTrackStreams,
+  getFollowers,
+  getFollowings,
+  getUserPlaylists,
+  getUserLikesTracks,
+  getTrackComments,
+  getTrackLikes,
+  getRelatedTracks,
+  getPlaylist,
+  getPlaylistTracks,
+  searchUsers,
+  searchPlaylists,
 } from "soundcloud-api-ts";
 import type { SoundCloudRoutesConfig } from "../types.js";
 
@@ -44,6 +55,22 @@ function errorResponse(message: string, status: number): Response {
 async function handleRoute(pathname: string, url: URL): Promise<Response> {
   const token = await ensureToken();
 
+  // /search/playlists?q=...
+  if (pathname === "/search/playlists") {
+    const q = url.searchParams.get("q");
+    if (!q) return errorResponse("Missing query parameter 'q'", 400);
+    const result = await searchPlaylists(token, q);
+    return jsonResponse(result);
+  }
+
+  // /search/users?q=...
+  if (pathname === "/search/users") {
+    const q = url.searchParams.get("q");
+    if (!q) return errorResponse("Missing query parameter 'q'", 400);
+    const result = await searchUsers(token, q);
+    return jsonResponse(result);
+  }
+
   // /search/tracks?q=...&limit=...
   if (pathname === "/search/tracks") {
     const q = url.searchParams.get("q");
@@ -60,11 +87,46 @@ async function handleRoute(pathname: string, url: URL): Promise<Response> {
     return jsonResponse(streams);
   }
 
+  // /tracks/:id/comments
+  const trackCommentsMatch = pathname.match(/^\/tracks\/([^/]+)\/comments$/);
+  if (trackCommentsMatch) {
+    const result = await getTrackComments(token, trackCommentsMatch[1]);
+    return jsonResponse(result);
+  }
+
+  // /tracks/:id/likes
+  const trackLikesMatch = pathname.match(/^\/tracks\/([^/]+)\/likes$/);
+  if (trackLikesMatch) {
+    const result = await getTrackLikes(token, trackLikesMatch[1]);
+    return jsonResponse(result);
+  }
+
+  // /tracks/:id/related
+  const trackRelatedMatch = pathname.match(/^\/tracks\/([^/]+)\/related$/);
+  if (trackRelatedMatch) {
+    const result = await getRelatedTracks(token, trackRelatedMatch[1]);
+    return jsonResponse(result);
+  }
+
   // /tracks/:id
   const trackMatch = pathname.match(/^\/tracks\/([^/]+)$/);
   if (trackMatch) {
     const track = await getTrack(token, trackMatch[1]);
     return jsonResponse(track);
+  }
+
+  // /playlists/:id/tracks
+  const playlistTracksMatch = pathname.match(/^\/playlists\/([^/]+)\/tracks$/);
+  if (playlistTracksMatch) {
+    const result = await getPlaylistTracks(token, playlistTracksMatch[1]);
+    return jsonResponse(result);
+  }
+
+  // /playlists/:id
+  const playlistMatch = pathname.match(/^\/playlists\/([^/]+)$/);
+  if (playlistMatch) {
+    const result = await getPlaylist(token, playlistMatch[1]);
+    return jsonResponse(result);
   }
 
   // /users/:id/tracks
@@ -76,6 +138,34 @@ async function handleRoute(pathname: string, url: URL): Promise<Response> {
       userTracksMatch[1],
       limit ? parseInt(limit, 10) : undefined,
     );
+    return jsonResponse(result);
+  }
+
+  // /users/:id/playlists
+  const userPlaylistsMatch = pathname.match(/^\/users\/([^/]+)\/playlists$/);
+  if (userPlaylistsMatch) {
+    const result = await getUserPlaylists(token, userPlaylistsMatch[1]);
+    return jsonResponse(result);
+  }
+
+  // /users/:id/likes/tracks
+  const userLikesMatch = pathname.match(/^\/users\/([^/]+)\/likes\/tracks$/);
+  if (userLikesMatch) {
+    const result = await getUserLikesTracks(token, userLikesMatch[1]);
+    return jsonResponse(result);
+  }
+
+  // /users/:id/followers
+  const userFollowersMatch = pathname.match(/^\/users\/([^/]+)\/followers$/);
+  if (userFollowersMatch) {
+    const result = await getFollowers(token, userFollowersMatch[1]);
+    return jsonResponse(result);
+  }
+
+  // /users/:id/followings
+  const userFollowingsMatch = pathname.match(/^\/users\/([^/]+)\/followings$/);
+  if (userFollowingsMatch) {
+    const result = await getFollowings(token, userFollowingsMatch[1]);
     return jsonResponse(result);
   }
 
@@ -101,9 +191,29 @@ export function createSoundCloudRoutes(config: SoundCloudRoutesConfig) {
       const token = await ensureToken();
       return searchTracks(token, q, page);
     },
+    async searchUsers(q: string) {
+      const token = await ensureToken();
+      return searchUsers(token, q);
+    },
+    async searchPlaylists(q: string) {
+      const token = await ensureToken();
+      return searchPlaylists(token, q);
+    },
     async getTrack(trackId: string | number) {
       const token = await ensureToken();
       return getTrack(token, trackId);
+    },
+    async getTrackComments(trackId: string | number) {
+      const token = await ensureToken();
+      return getTrackComments(token, trackId);
+    },
+    async getTrackLikes(trackId: string | number) {
+      const token = await ensureToken();
+      return getTrackLikes(token, trackId);
+    },
+    async getRelatedTracks(trackId: string | number) {
+      const token = await ensureToken();
+      return getRelatedTracks(token, trackId);
     },
     async getUser(userId: string | number) {
       const token = await ensureToken();
@@ -113,9 +223,33 @@ export function createSoundCloudRoutes(config: SoundCloudRoutesConfig) {
       const token = await ensureToken();
       return getUserTracks(token, userId, limit);
     },
+    async getUserPlaylists(userId: string | number) {
+      const token = await ensureToken();
+      return getUserPlaylists(token, userId);
+    },
+    async getUserLikesTracks(userId: string | number) {
+      const token = await ensureToken();
+      return getUserLikesTracks(token, userId);
+    },
+    async getFollowers(userId: string | number) {
+      const token = await ensureToken();
+      return getFollowers(token, userId);
+    },
+    async getFollowings(userId: string | number) {
+      const token = await ensureToken();
+      return getFollowings(token, userId);
+    },
     async getTrackStreams(trackId: string | number) {
       const token = await ensureToken();
       return getTrackStreams(token, trackId);
+    },
+    async getPlaylist(playlistId: string | number) {
+      const token = await ensureToken();
+      return getPlaylist(token, playlistId);
+    },
+    async getPlaylistTracks(playlistId: string | number) {
+      const token = await ensureToken();
+      return getPlaylistTracks(token, playlistId);
     },
 
     /**
