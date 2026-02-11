@@ -1,21 +1,31 @@
 {
   "name": "soundcloud-api-ts-next",
   "version": "1.5.0",
-  "description": "Next.js integration for soundcloud-api-ts — React hooks + secure API route handlers",
+  "description": "TypeScript SoundCloud API React hooks and Next.js API route handlers — App Router, Pages Router, OAuth PKCE, secrets stay server-side",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/twin-paws/soundcloud-api-ts-next"
   },
-  "homepage": "https://twin-paws.github.io/soundcloud-api-ts-next/",
+  "homepage": "https://github.com/twin-paws/soundcloud-api-ts-next",
   "keywords": [
     "soundcloud",
-    "nextjs",
-    "react",
-    "hooks",
+    "soundcloud api",
     "soundcloud-api",
     "typescript",
-    "soundcloud-next"
+    "nextjs",
+    "next.js",
+    "react",
+    "react hooks",
+    "app router",
+    "pages router",
+    "oauth",
+    "soundcloud oauth",
+    "soundcloud typescript",
+    "soundcloud react",
+    "soundcloud next",
+    "music api",
+    "api route handlers"
   ],
   "type": "module",
   "exports": {
@@ -74,5 +84,8 @@
     "typedoc": "^0.28.16",
     "typescript": "^5.7.0",
     "vitest": "^4.0.18"
+  },
+  "bugs": {
+    "url": "https://github.com/twin-paws/soundcloud-api-ts-next/issues"
   }
 }

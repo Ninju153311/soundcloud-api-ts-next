@@ -10,9 +10,11 @@
 [![Node](https://img.shields.io/badge/Node.js-≥18-339933.svg)](https://nodejs.org/)
 [![docs](https://img.shields.io/badge/docs-TypeDoc-blue.svg)](https://twin-paws.github.io/soundcloud-api-ts-next/)
 
-React hooks and Next.js API route handlers for the SoundCloud API. Client secrets stay on the server.
+TypeScript React hooks and Next.js API route handlers for the SoundCloud API. Works with App Router and Pages Router. OAuth PKCE authentication built in. Client secrets stay on the server.
 
-[**API Docs**](https://twin-paws.github.io/soundcloud-api-ts-next/) · Built on [soundcloud-api-ts](https://github.com/twin-paws/soundcloud-api-ts).
+[**API Docs**](https://twin-paws.github.io/soundcloud-api-ts-next/) · Built on [soundcloud-api-ts](https://github.com/twin-paws/soundcloud-api-ts) — the TypeScript-first SoundCloud API client.
+
+> **When to use this vs direct API calls:** Use this package when you're building a Next.js app and want typed React hooks for SoundCloud data without exposing credentials to the browser. The hooks fetch through your Next.js API routes, keeping secrets server-side. Supports both App Router and Pages Router. For backend-only or non-React projects, use [soundcloud-api-ts](https://github.com/twin-paws/soundcloud-api-ts) directly.
 
 ## Install
 
