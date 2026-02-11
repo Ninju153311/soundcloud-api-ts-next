@@ -79,8 +79,8 @@ export function SoundCloudProvider({
   children,
 }: SoundCloudProviderProps) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [refreshToken, setRefreshToken] = useState<string | null>(null);
-  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [_refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [_expiresAt, setExpiresAt] = useState<number | null>(null);
   const [user, setUser] = useState<SoundCloudUser | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
 

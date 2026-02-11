@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor, act } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { SoundCloudProvider } from '../../client/provider.js';
 import { useTrack } from '../../client/hooks/useTrack.js';
 import { useTrackSearch } from '../../client/hooks/useTrackSearch.js';

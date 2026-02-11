@@ -36,7 +36,7 @@ function mockFail(s: number) {
 }
 
 // Helper to test a standard ID-based collection hook
-function testCollectionHook(name: string, hook: (id: any) => any, endpoint: string) {
+function testCollectionHook(name: string, hook: (id: any) => any, _endpoint: string) {
   describe(name, () => {
     it('fetches data', async () => {
       mockOk({ collection: [{ id: 1 }] });

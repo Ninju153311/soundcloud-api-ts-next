@@ -1,5 +1,4 @@
 import {
-  SoundCloudClient,
   getClientToken,
   searchTracks,
   getTrack,

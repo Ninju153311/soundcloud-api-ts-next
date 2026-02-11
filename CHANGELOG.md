@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.7.4] - 2026-02-10
+
+### Fixed
+- Fix all ESLint errors (0 errors, 59 warnings remaining — all `no-explicit-any` in tests)
+- Replace `@ts-ignore` with `@ts-expect-error` + descriptions
+- Remove unused imports (`SoundCloudClient`, `useState`, `act`, `useSoundCloudContext`, `setupAuth`)
+- Prefix unused state vars with underscore (`_refreshToken`, `_expiresAt`)
+
 ## [1.7.3] - 2026-02-10
 
 ### Fixed

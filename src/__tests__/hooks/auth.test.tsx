@@ -27,7 +27,7 @@ describe('useSCAuth', () => {
     });
     // Mock window.location
     const originalLocation = window.location;
-    // @ts-ignore
+    // @ts-expect-error — testing invalid props
     delete window.location;
     window.location = { ...originalLocation, href: '' } as any;
 

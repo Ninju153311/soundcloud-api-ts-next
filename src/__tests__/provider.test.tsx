@@ -82,7 +82,7 @@ describe('SoundCloudProvider', () => {
 
   it('login fetches auth URL and redirects', async () => {
     const originalLocation = window.location;
-    // @ts-ignore
+    // @ts-expect-error — testing invalid props
     delete window.location;
     window.location = { ...originalLocation, href: '' } as any;
 
