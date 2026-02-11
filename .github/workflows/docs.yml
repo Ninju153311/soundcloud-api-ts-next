@@ -30,7 +30,7 @@ jobs:
           version: 9
       - run: pnpm install
       - run: pnpm build
-      - run: pnpm docs
+      - run: pnpm docs:generate
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
