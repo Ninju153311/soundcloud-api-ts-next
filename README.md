@@ -1,9 +1,14 @@
 # soundcloud-api-ts-next
 
 [![npm version](https://img.shields.io/npm/v/soundcloud-api-ts-next)](https://www.npmjs.com/package/soundcloud-api-ts-next)
-[![npm downloads](https://img.shields.io/npm/dm/soundcloud-api-ts-next)](https://www.npmjs.com/package/soundcloud-api-ts-next)
-[![license](https://img.shields.io/npm/l/soundcloud-api-ts-next)](https://github.com/twin-paws/soundcloud-api-ts-next/blob/main/LICENSE)
+[![npm downloads](https://img.shields.io/npm/dw/soundcloud-api-ts-next)](https://www.npmjs.com/package/soundcloud-api-ts-next)
 [![CI](https://github.com/twin-paws/soundcloud-api-ts-next/actions/workflows/ci.yml/badge.svg)](https://github.com/twin-paws/soundcloud-api-ts-next/actions/workflows/ci.yml)
+[![license](https://img.shields.io/npm/l/soundcloud-api-ts-next)](https://github.com/twin-paws/soundcloud-api-ts-next/blob/main/LICENSE)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/soundcloud-api-ts-next)](https://bundlephobia.com/package/soundcloud-api-ts-next)
+[![install size](https://packagephobia.com/badge?p=soundcloud-api-ts-next)](https://packagephobia.com/result?p=soundcloud-api-ts-next)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![Node](https://img.shields.io/badge/Node.js-≥18-339933.svg)](https://nodejs.org/)
+[![docs](https://img.shields.io/badge/docs-TypeDoc-blue.svg)](https://twin-paws.github.io/soundcloud-api-ts-next/)
 
 React hooks and Next.js API route handlers for the SoundCloud API. Client secrets stay on the server.
 
