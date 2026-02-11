@@ -3,6 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/soundcloud-api-ts-next)](https://www.npmjs.com/package/soundcloud-api-ts-next)
 [![npm downloads](https://img.shields.io/npm/dw/soundcloud-api-ts-next)](https://www.npmjs.com/package/soundcloud-api-ts-next)
 [![CI](https://github.com/twin-paws/soundcloud-api-ts-next/actions/workflows/ci.yml/badge.svg)](https://github.com/twin-paws/soundcloud-api-ts-next/actions/workflows/ci.yml)
+[![coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)]()
 [![license](https://img.shields.io/npm/l/soundcloud-api-ts-next)](https://github.com/twin-paws/soundcloud-api-ts-next/blob/main/LICENSE)
 [![bundle size](https://img.shields.io/bundlephobia/minzip/soundcloud-api-ts-next)](https://bundlephobia.com/package/soundcloud-api-ts-next)
 [![install size](https://packagephobia.com/badge?p=soundcloud-api-ts-next)](https://packagephobia.com/result?p=soundcloud-api-ts-next)

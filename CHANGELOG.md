@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.6.0] - 2026-02-10
+
+### Added
+- 100% test coverage across all metrics (statements, branches, functions, lines)
+- Coverage badge in README
+- 273 tests (up from 244)
+
+### Fixed
+- AbortError handling coverage for all hooks
+- Infinite pagination edge case coverage (unmount during fetch, loadMore with no next_href)
+- Provider cancelled-state coverage for auth fetch
+- Server routes edge case coverage (PKCE cleanup, pagesHandler error paths)
+
 ## [1.5.0] - 2026-02-10
 
 ### Added
