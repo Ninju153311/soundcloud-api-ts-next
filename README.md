@@ -7,7 +7,7 @@
 [![bundle size](https://img.shields.io/bundlephobia/minzip/soundcloud-api-ts-next)](https://bundlephobia.com/package/soundcloud-api-ts-next)
 [![install size](https://packagephobia.com/badge?p=soundcloud-api-ts-next)](https://packagephobia.com/result?p=soundcloud-api-ts-next)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
-[![Node](https://img.shields.io/badge/Node.js-≥18-339933.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/Node.js-≥20-339933.svg)](https://nodejs.org/)
 [![docs](https://img.shields.io/badge/docs-TypeDoc-blue.svg)](https://twin-paws.github.io/soundcloud-api-ts-next/)
 
 TypeScript React hooks and Next.js API route handlers for the SoundCloud API. Works with App Router and Pages Router. OAuth PKCE authentication built in. Client secrets stay on the server.
