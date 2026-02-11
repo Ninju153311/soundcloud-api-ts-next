@@ -31,6 +31,7 @@ export { usePlaylist } from "./hooks/usePlaylist.js";
 export { usePlaylistTracks } from "./hooks/usePlaylistTracks.js";
 export { usePlaylistSearch } from "./hooks/usePlaylistSearch.js";
 export { useUserSearch } from "./hooks/useUserSearch.js";
+export { useResolve } from "./hooks/useResolve.js";
 
 // Infinite/paginated hooks
 export { useInfiniteTrackSearch } from "./hooks/useInfiniteTrackSearch.js";

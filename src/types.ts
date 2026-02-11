@@ -44,6 +44,26 @@ export interface SoundCloudRoutesConfig {
   clientSecret: string;
   /** OAuth redirect URI — required if using authentication features (login/callback). */
   redirectUri?: string;
+  /**
+   * Custom token provider for public (non-auth) routes.
+   * When set, this function is called instead of the default client-credentials flow.
+   * Useful when your app stores OAuth tokens externally (e.g. Redis, database).
+   *
+   * @returns A valid SoundCloud access token string.
+   *
+   * @example
+   * ```ts
+   * const sc = createSoundCloudRoutes({
+   *   clientId: process.env.SC_CLIENT_ID!,
+   *   clientSecret: process.env.SC_CLIENT_SECRET!,
+   *   getToken: async () => {
+   *     const redis = await getRedisClient();
+   *     return redis.get("sc:token");
+   *   },
+   * });
+   * ```
+   */
+  getToken?: () => Promise<string>;
 }
 
 /**

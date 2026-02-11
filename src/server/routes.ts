@@ -18,6 +18,7 @@ import {
   searchUsers,
   searchPlaylists,
   scFetchUrl,
+  resolveUrl,
   // Auth
   getAuthorizationUrl,
   generateCodeVerifier,
@@ -70,6 +71,10 @@ function cleanPkceStore() {
 }
 
 async function ensureToken(): Promise<string> {
+  // Use custom token provider if configured
+  if (ctx.config.getToken) {
+    return ctx.config.getToken();
+  }
   if (ctx.token && Date.now() < ctx.tokenExpiry) return ctx.token;
   const result = await getClientToken(ctx.config.clientId, ctx.config.clientSecret);
   ctx.token = result.access_token;
@@ -286,6 +291,14 @@ async function handleRoute(
   // ── Public routes (use client credentials token) ──
   const token = await ensureToken();
 
+  // /resolve?url=<soundcloud_url> — resolve a SoundCloud URL to an API resource
+  if (pathname === "/resolve") {
+    const scUrl = url.searchParams.get("url");
+    if (!scUrl) return errorResponse("Missing 'url' parameter", 400);
+    const result = await resolveUrl(token, scUrl);
+    return jsonResponse(result);
+  }
+
   // /next?url=<encoded_next_href> — generic next-page fetcher
   if (pathname === "/next") {
     const nextUrl = url.searchParams.get("url");
@@ -456,6 +469,10 @@ export function createSoundCloudRoutes(config: SoundCloudRoutesConfig) {
 
   return {
     /** Individual route handlers */
+    async resolveUrl(url: string) {
+      const token = await ensureToken();
+      return resolveUrl(token, url);
+    },
     async searchTracks(q: string, page?: number) {
       const token = await ensureToken();
       return searchTracks(token, q, page);
