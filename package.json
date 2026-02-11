@@ -1,7 +1,7 @@
 {
   "name": "soundcloud-api-ts-next",
   "version": "1.4.1",
-  "description": "Next.js integration for soundcloud-api-ts — React hooks + secure API route handlers",
+  "description": "Next.js integration for soundcloud-api-ts \u2014 React hooks + secure API route handlers",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -40,7 +40,11 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "docs": "typedoc"
+    "docs": "typedoc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src/"
   },
   "dependencies": {
     "soundcloud-api-ts": "^1.9.1"
@@ -55,11 +59,20 @@
     }
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/react": "^19.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
+    "@vitejs/plugin-react": "^5.1.4",
+    "eslint": "^10.0.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "jsdom": "^28.0.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "tsup": "^8.0.0",
     "typedoc": "^0.28.16",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
   }
 }
