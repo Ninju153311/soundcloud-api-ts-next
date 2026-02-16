@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.1] - 2026-02-15
+
+### Fixed
+
+- **Full telemetry coverage**: Refactored `routes.ts` from standalone function imports to internal `SoundCloudClient` — all API calls (auth, data, actions) now emit `onRequest` telemetry
+- Previously `onRequest` was declared on config but not wired to anything
+
+### Changed
+
+- Bumped `soundcloud-api-ts` to ^1.11.1 (auth telemetry fix)
+
 ## [1.9.0] - 2026-02-15
 
 ### Added

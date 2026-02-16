@@ -1,51 +1,78 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+const mockClient = {
+  auth: {
+    getClientToken: vi.fn().mockResolvedValue({ access_token: 'tok', expires_in: 3600 }),
+    getUserToken: vi.fn().mockResolvedValue({ access_token: 'user_tok', refresh_token: 'ref', expires_in: 3600 }),
+    refreshUserToken: vi.fn().mockResolvedValue({ access_token: 'new_tok' }),
+  },
+  tracks: {
+    getTrack: vi.fn().mockResolvedValue({ id: 1, title: 'Track' }),
+    getStreams: vi.fn().mockResolvedValue({ http_mp3_128_url: 'url' }),
+    getComments: vi.fn().mockResolvedValue({ collection: [] }),
+    getLikes: vi.fn().mockResolvedValue({ collection: [] }),
+    getReposts: vi.fn().mockResolvedValue({ collection: [] }),
+    getRelated: vi.fn().mockResolvedValue({ collection: [] }),
+  },
+  users: {
+    getUser: vi.fn().mockResolvedValue({ id: 2, username: 'user' }),
+    getTracks: vi.fn().mockResolvedValue({ collection: [] }),
+    getFollowers: vi.fn().mockResolvedValue({ collection: [] }),
+    getFollowings: vi.fn().mockResolvedValue({ collection: [] }),
+    getPlaylists: vi.fn().mockResolvedValue({ collection: [] }),
+    getLikesTracks: vi.fn().mockResolvedValue({ collection: [] }),
+    getLikesPlaylists: vi.fn().mockResolvedValue({ collection: [] }),
+  },
+  playlists: {
+    getPlaylist: vi.fn().mockResolvedValue({ id: 3, title: 'Playlist' }),
+    getTracks: vi.fn().mockResolvedValue({ collection: [] }),
+    getReposts: vi.fn().mockResolvedValue({ collection: [] }),
+  },
+  search: {
+    tracks: vi.fn().mockResolvedValue({ collection: [{ id: 1 }], next_href: null }),
+    users: vi.fn().mockResolvedValue({ collection: [] }),
+    playlists: vi.fn().mockResolvedValue({ collection: [] }),
+  },
+  resolve: {
+    resolveUrl: vi.fn().mockResolvedValue('resolved-url'),
+  },
+  me: {
+    getMe: vi.fn().mockResolvedValue({ id: 1, username: 'me' }),
+    getTracks: vi.fn().mockResolvedValue({ collection: [] }),
+    getLikesTracks: vi.fn().mockResolvedValue({ collection: [] }),
+    getPlaylists: vi.fn().mockResolvedValue({ collection: [] }),
+    getFollowings: vi.fn().mockResolvedValue({ collection: [] }),
+    getFollowers: vi.fn().mockResolvedValue({ collection: [] }),
+    follow: vi.fn().mockResolvedValue(undefined),
+    unfollow: vi.fn().mockResolvedValue(undefined),
+  },
+  likes: {
+    likeTrack: vi.fn().mockResolvedValue(true),
+    unlikeTrack: vi.fn().mockResolvedValue(true),
+    likePlaylist: vi.fn().mockResolvedValue(true),
+    unlikePlaylist: vi.fn().mockResolvedValue(true),
+  },
+  reposts: {
+    repostTrack: vi.fn().mockResolvedValue(true),
+    unrepostTrack: vi.fn().mockResolvedValue(true),
+    repostPlaylist: vi.fn().mockResolvedValue(true),
+    unrepostPlaylist: vi.fn().mockResolvedValue(true),
+  },
+  setToken: vi.fn(),
+  clearToken: vi.fn(),
+};
+
 vi.mock('soundcloud-api-ts', () => ({
-  getClientToken: vi.fn().mockResolvedValue({ access_token: 'tok', expires_in: 3600 }),
-  searchTracks: vi.fn().mockResolvedValue({ collection: [{ id: 1 }], next_href: null }),
-  getTrack: vi.fn().mockResolvedValue({ id: 1, title: 'Track' }),
-  getUser: vi.fn().mockResolvedValue({ id: 2, username: 'user' }),
-  getUserTracks: vi.fn().mockResolvedValue({ collection: [] }),
-  getTrackStreams: vi.fn().mockResolvedValue({ http_mp3_128_url: 'url' }),
-  getFollowers: vi.fn().mockResolvedValue({ collection: [] }),
-  getFollowings: vi.fn().mockResolvedValue({ collection: [] }),
-  getUserPlaylists: vi.fn().mockResolvedValue({ collection: [] }),
-  getUserLikesTracks: vi.fn().mockResolvedValue({ collection: [] }),
-  getTrackComments: vi.fn().mockResolvedValue({ collection: [] }),
-  getTrackLikes: vi.fn().mockResolvedValue({ collection: [] }),
-  getRelatedTracks: vi.fn().mockResolvedValue({ collection: [] }),
-  getPlaylist: vi.fn().mockResolvedValue({ id: 3, title: 'Playlist' }),
-  getPlaylistTracks: vi.fn().mockResolvedValue({ collection: [] }),
-  searchUsers: vi.fn().mockResolvedValue({ collection: [] }),
-  searchPlaylists: vi.fn().mockResolvedValue({ collection: [] }),
-  scFetchUrl: vi.fn().mockResolvedValue({ collection: [] }),
+  SoundCloudClient: function() { return mockClient; },
   getAuthorizationUrl: vi.fn().mockReturnValue('https://soundcloud.com/connect?test'),
   generateCodeVerifier: vi.fn().mockReturnValue('verifier123'),
   generateCodeChallenge: vi.fn().mockResolvedValue('challenge123'),
-  getUserToken: vi.fn().mockResolvedValue({ access_token: 'user_tok', refresh_token: 'ref', expires_in: 3600 }),
-  refreshUserToken: vi.fn().mockResolvedValue({ access_token: 'new_tok' }),
   signOut: vi.fn().mockResolvedValue(undefined),
-  SoundCloudClient: vi.fn(),
-  getMe: vi.fn().mockResolvedValue({ id: 1, username: 'me' }),
-  getMeTracks: vi.fn().mockResolvedValue({ collection: [] }),
-  getMeLikesTracks: vi.fn().mockResolvedValue({ collection: [] }),
-  getMePlaylists: vi.fn().mockResolvedValue({ collection: [] }),
-  getMeFollowings: vi.fn().mockResolvedValue({ collection: [] }),
-  getMeFollowers: vi.fn().mockResolvedValue({ collection: [] }),
-  followUser: vi.fn().mockResolvedValue(undefined),
-  unfollowUser: vi.fn().mockResolvedValue(undefined),
-  likeTrack: vi.fn().mockResolvedValue(undefined),
-  unlikeTrack: vi.fn().mockResolvedValue(undefined),
-  likePlaylist: vi.fn().mockResolvedValue(undefined),
-  unlikePlaylist: vi.fn().mockResolvedValue(undefined),
-  repostTrack: vi.fn().mockResolvedValue(undefined),
-  unrepostTrack: vi.fn().mockResolvedValue(undefined),
-  repostPlaylist: vi.fn().mockResolvedValue(undefined),
-  unrepostPlaylist: vi.fn().mockResolvedValue(undefined),
+  scFetchUrl: vi.fn().mockResolvedValue({ collection: [] }),
 }));
 
 import * as scApi from 'soundcloud-api-ts';
-const mocks = scApi as any;
+const mocks = { ...scApi, mockClient } as any;
 
 import { createSoundCloudRoutes } from '../server/routes.js';
 
@@ -101,80 +128,80 @@ describe('createSoundCloudRoutes', () => {
   // Direct method calls
   it('direct searchTracks', async () => {
     await routes.searchTracks('q', 1);
-    expect(mocks.searchTracks).toHaveBeenCalled();
+    expect(mockClient.search.tracks).toHaveBeenCalled();
   });
   it('direct searchUsers', async () => {
     await routes.searchUsers('q');
-    expect(mocks.searchUsers).toHaveBeenCalled();
+    expect(mockClient.search.users).toHaveBeenCalled();
   });
   it('direct searchPlaylists', async () => {
     await routes.searchPlaylists('q');
-    expect(mocks.searchPlaylists).toHaveBeenCalled();
+    expect(mockClient.search.playlists).toHaveBeenCalled();
   });
   it('direct getTrack', async () => {
     await routes.getTrack(1);
-    expect(mocks.getTrack).toHaveBeenCalled();
+    expect(mockClient.tracks.getTrack).toHaveBeenCalled();
   });
   it('direct getUser', async () => {
     await routes.getUser(1);
-    expect(mocks.getUser).toHaveBeenCalled();
+    expect(mockClient.users.getUser).toHaveBeenCalled();
   });
   it('direct getUserTracks', async () => {
     await routes.getUserTracks(1, 10);
-    expect(mocks.getUserTracks).toHaveBeenCalled();
+    expect(mockClient.users.getTracks).toHaveBeenCalled();
   });
   it('direct getUserPlaylists', async () => {
     await routes.getUserPlaylists(1);
-    expect(mocks.getUserPlaylists).toHaveBeenCalled();
+    expect(mockClient.users.getPlaylists).toHaveBeenCalled();
   });
   it('direct getUserLikesTracks', async () => {
     await routes.getUserLikesTracks(1);
-    expect(mocks.getUserLikesTracks).toHaveBeenCalled();
+    expect(mockClient.users.getLikesTracks).toHaveBeenCalled();
   });
   it('direct getFollowers', async () => {
     await routes.getFollowers(1);
-    expect(mocks.getFollowers).toHaveBeenCalled();
+    expect(mockClient.users.getFollowers).toHaveBeenCalled();
   });
   it('direct getFollowings', async () => {
     await routes.getFollowings(1);
-    expect(mocks.getFollowings).toHaveBeenCalled();
+    expect(mockClient.users.getFollowings).toHaveBeenCalled();
   });
   it('direct getTrackStreams', async () => {
     await routes.getTrackStreams(1);
-    expect(mocks.getTrackStreams).toHaveBeenCalled();
+    expect(mockClient.tracks.getStreams).toHaveBeenCalled();
   });
   it('direct getTrackComments', async () => {
     await routes.getTrackComments(1);
-    expect(mocks.getTrackComments).toHaveBeenCalled();
+    expect(mockClient.tracks.getComments).toHaveBeenCalled();
   });
   it('direct getTrackLikes', async () => {
     await routes.getTrackLikes(1);
-    expect(mocks.getTrackLikes).toHaveBeenCalled();
+    expect(mockClient.tracks.getLikes).toHaveBeenCalled();
   });
   it('direct getRelatedTracks', async () => {
     await routes.getRelatedTracks(1);
-    expect(mocks.getRelatedTracks).toHaveBeenCalled();
+    expect(mockClient.tracks.getRelated).toHaveBeenCalled();
   });
   it('direct getPlaylist', async () => {
     await routes.getPlaylist(1);
-    expect(mocks.getPlaylist).toHaveBeenCalled();
+    expect(mockClient.playlists.getPlaylist).toHaveBeenCalled();
   });
   it('direct getPlaylistTracks', async () => {
     await routes.getPlaylistTracks(1);
-    expect(mocks.getPlaylistTracks).toHaveBeenCalled();
+    expect(mockClient.playlists.getTracks).toHaveBeenCalled();
   });
 
   // ── Search routes ──
   it('GET /search/tracks', async () => {
     const res = await handle(makeReq('/search/tracks?q=test'));
     expect(res.status).toBe(200);
-    expect(mocks.searchTracks).toHaveBeenCalledWith('tok', 'test', undefined);
+    expect(mockClient.search.tracks).toHaveBeenCalledWith('test', undefined, { token: 'tok' });
   });
 
   it('GET /search/tracks with page', async () => {
     const res = await handle(makeReq('/search/tracks?q=test&page=2'));
     expect(res.status).toBe(200);
-    expect(mocks.searchTracks).toHaveBeenCalledWith('tok', 'test', 2);
+    expect(mockClient.search.tracks).toHaveBeenCalledWith('test', 2, { token: 'tok' });
   });
 
   it('GET /search/tracks without q returns 400', async () => {
@@ -244,7 +271,7 @@ describe('createSoundCloudRoutes', () => {
   it('GET /users/:id/tracks with limit', async () => {
     const res = await handle(makeReq('/users/42/tracks?limit=10'));
     expect(res.status).toBe(200);
-    expect(mocks.getUserTracks).toHaveBeenCalledWith('tok', '42', 10);
+    expect(mockClient.users.getTracks).toHaveBeenCalledWith('42', 10, { token: 'tok' });
   });
 
   it('GET /users/:id/playlists', async () => {
@@ -437,13 +464,13 @@ describe('createSoundCloudRoutes', () => {
   it('POST /me/follow/:userId', async () => {
     const res = await handle(makeAuthReq('/me/follow/42', 'POST'));
     expect(res.status).toBe(200);
-    expect(mocks.followUser).toHaveBeenCalledWith('user_tok', '42');
+    expect(mockClient.me.follow).toHaveBeenCalledWith('42', { token: 'user_tok' });
   });
 
   it('DELETE /me/follow/:userId', async () => {
     const res = await handle(makeAuthReq('/me/follow/42', 'DELETE'));
     expect(res.status).toBe(200);
-    expect(mocks.unfollowUser).toHaveBeenCalledWith('user_tok', '42');
+    expect(mockClient.me.unfollow).toHaveBeenCalledWith('42', { token: 'user_tok' });
   });
 
   it('POST /me/follow requires auth', async () => {
@@ -454,13 +481,13 @@ describe('createSoundCloudRoutes', () => {
   it('POST /tracks/:id/like', async () => {
     const res = await handle(makeAuthReq('/tracks/10/like', 'POST'));
     expect(res.status).toBe(200);
-    expect(mocks.likeTrack).toHaveBeenCalledWith('user_tok', '10');
+    expect(mockClient.likes.likeTrack).toHaveBeenCalledWith('10', { token: 'user_tok' });
   });
 
   it('DELETE /tracks/:id/like', async () => {
     const res = await handle(makeAuthReq('/tracks/10/like', 'DELETE'));
     expect(res.status).toBe(200);
-    expect(mocks.unlikeTrack).toHaveBeenCalledWith('user_tok', '10');
+    expect(mockClient.likes.unlikeTrack).toHaveBeenCalledWith('10', { token: 'user_tok' });
   });
 
   it('POST /tracks/:id/like requires auth', async () => {
@@ -471,13 +498,13 @@ describe('createSoundCloudRoutes', () => {
   it('POST /tracks/:id/repost', async () => {
     const res = await handle(makeAuthReq('/tracks/10/repost', 'POST'));
     expect(res.status).toBe(200);
-    expect(mocks.repostTrack).toHaveBeenCalledWith('user_tok', '10');
+    expect(mockClient.reposts.repostTrack).toHaveBeenCalledWith('10', { token: 'user_tok' });
   });
 
   it('DELETE /tracks/:id/repost', async () => {
     const res = await handle(makeAuthReq('/tracks/10/repost', 'DELETE'));
     expect(res.status).toBe(200);
-    expect(mocks.unrepostTrack).toHaveBeenCalledWith('user_tok', '10');
+    expect(mockClient.reposts.unrepostTrack).toHaveBeenCalledWith('10', { token: 'user_tok' });
   });
 
   it('POST /tracks/:id/repost requires auth', async () => {
@@ -488,13 +515,13 @@ describe('createSoundCloudRoutes', () => {
   it('POST /playlists/:id/like', async () => {
     const res = await handle(makeAuthReq('/playlists/5/like', 'POST'));
     expect(res.status).toBe(200);
-    expect(mocks.likePlaylist).toHaveBeenCalledWith('user_tok', '5');
+    expect(mockClient.likes.likePlaylist).toHaveBeenCalledWith('5', { token: 'user_tok' });
   });
 
   it('DELETE /playlists/:id/like', async () => {
     const res = await handle(makeAuthReq('/playlists/5/like', 'DELETE'));
     expect(res.status).toBe(200);
-    expect(mocks.unlikePlaylist).toHaveBeenCalledWith('user_tok', '5');
+    expect(mockClient.likes.unlikePlaylist).toHaveBeenCalledWith('5', { token: 'user_tok' });
   });
 
   it('POST /playlists/:id/like requires auth', async () => {
@@ -505,13 +532,13 @@ describe('createSoundCloudRoutes', () => {
   it('POST /playlists/:id/repost', async () => {
     const res = await handle(makeAuthReq('/playlists/5/repost', 'POST'));
     expect(res.status).toBe(200);
-    expect(mocks.repostPlaylist).toHaveBeenCalledWith('user_tok', '5');
+    expect(mockClient.reposts.repostPlaylist).toHaveBeenCalledWith('5', { token: 'user_tok' });
   });
 
   it('DELETE /playlists/:id/repost', async () => {
     const res = await handle(makeAuthReq('/playlists/5/repost', 'DELETE'));
     expect(res.status).toBe(200);
-    expect(mocks.unrepostPlaylist).toHaveBeenCalledWith('user_tok', '5');
+    expect(mockClient.reposts.unrepostPlaylist).toHaveBeenCalledWith('5', { token: 'user_tok' });
   });
 
   it('POST /playlists/:id/repost requires auth', async () => {
@@ -524,18 +551,18 @@ describe('createSoundCloudRoutes', () => {
     await handle(makeReq('/tracks/1'));
     await handle(makeReq('/tracks/2'));
     // getClientToken should only be called once (cached)
-    expect(mocks.getClientToken).toHaveBeenCalledTimes(1);
+    expect(mockClient.auth.getClientToken).toHaveBeenCalledTimes(1);
   });
 
   // ── Error handling ──
   it('handles thrown errors with statusCode', async () => {
-    mocks.getTrack.mockRejectedValueOnce(Object.assign(new Error('Not found'), { statusCode: 404 }));
+    mockClient.tracks.getTrack.mockRejectedValueOnce(Object.assign(new Error('Not found'), { statusCode: 404 }));
     const res = await handle(makeReq('/tracks/999'));
     expect(res.status).toBe(404);
   });
 
   it('handles thrown errors without statusCode', async () => {
-    mocks.getTrack.mockRejectedValueOnce(new Error('boom'));
+    mockClient.tracks.getTrack.mockRejectedValueOnce(new Error('boom'));
     const res = await handle(makeReq('/tracks/999'));
     expect(res.status).toBe(500);
   });
@@ -596,7 +623,7 @@ describe('createSoundCloudRoutes', () => {
   });
 
   it('pagesHandler handles errors', async () => {
-    mocks.getTrack.mockRejectedValueOnce(Object.assign(new Error('fail'), { statusCode: 503 }));
+    mockClient.tracks.getTrack.mockRejectedValueOnce(Object.assign(new Error('fail'), { statusCode: 503 }));
     const pagesHandle = routes.pagesHandler();
     const req = {
       query: { route: ['tracks', '999'] },
@@ -680,7 +707,7 @@ describe('createSoundCloudRoutes', () => {
   // ── handler() outer catch with error without message (line 548) ──
   it('handler catches error without message', async () => {
     // Make handleRoute throw something without .message
-    mocks.getTrack.mockRejectedValueOnce(null);
+    mockClient.tracks.getTrack.mockRejectedValueOnce(null);
     const res = await handle(makeReq('/tracks/1'));
     expect(res.status).toBe(500);
     const json = await res.json();

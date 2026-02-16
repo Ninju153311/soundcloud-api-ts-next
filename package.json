@@ -1,6 +1,6 @@
 {
   "name": "soundcloud-api-ts-next",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "TypeScript SoundCloud API React hooks and Next.js API route handlers — App Router, Pages Router, OAuth PKCE, secrets stay server-side",
   "license": "MIT",
   "repository": {

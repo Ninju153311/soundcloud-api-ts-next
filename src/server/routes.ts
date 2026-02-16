@@ -1,62 +1,37 @@
 import {
-  getClientToken,
-  searchTracks,
-  getTrack,
-  getUser,
-  getUserTracks,
-  getTrackStreams,
-  getFollowers,
-  getFollowings,
-  getUserPlaylists,
-  getUserLikesTracks,
-  getTrackComments,
-  getTrackLikes,
-  getRelatedTracks,
-  getPlaylist,
-  getPlaylistTracks,
-  searchUsers,
-  searchPlaylists,
-  scFetchUrl,
-  resolveUrl,
-  // Auth
-  getAuthorizationUrl,
+  SoundCloudClient,
   generateCodeVerifier,
   generateCodeChallenge,
-  getUserToken,
-  refreshUserToken,
+  getAuthorizationUrl,
   signOut,
-  // Me
-  getMe,
-  getMeTracks,
-  getMeLikesTracks,
-  getMePlaylists,
-  getMeFollowings,
-  getMeFollowers,
-  // Actions
-  followUser,
-  unfollowUser,
-  likeTrack,
-  unlikeTrack,
-  likePlaylist,
-  unlikePlaylist,
-  repostTrack,
-  unrepostTrack,
-  repostPlaylist,
-  unrepostPlaylist,
 } from "soundcloud-api-ts";
 import type { SoundCloudRoutesConfig, SCRouteTelemetry } from "../types.js";
 
 interface RouteContext {
   config: SoundCloudRoutesConfig;
+  client: SoundCloudClient | null;
   token: string | undefined;
   tokenExpiry: number;
 }
 
 const ctx: RouteContext = {
   config: { clientId: "", clientSecret: "" },
+  client: null,
   token: undefined,
   tokenExpiry: 0,
 };
+
+function getClient(): SoundCloudClient {
+  if (!ctx.client) {
+    ctx.client = new SoundCloudClient({
+      clientId: ctx.config.clientId,
+      clientSecret: ctx.config.clientSecret,
+      redirectUri: ctx.config.redirectUri,
+      onRequest: ctx.config.onRequest,
+    });
+  }
+  return ctx.client;
+}
 
 // In-memory PKCE verifier store (state → verifier)
 const pkceStore = new Map<string, { verifier: string; createdAt: number }>();
@@ -75,7 +50,7 @@ async function ensureToken(): Promise<string> {
     return ctx.config.getToken();
   }
   if (ctx.token && Date.now() < ctx.tokenExpiry) return ctx.token;
-  const result = await getClientToken(ctx.config.clientId, ctx.config.clientSecret);
+  const result = await getClient().auth.getClientToken();
   ctx.token = result.access_token;
   // Expire 5 minutes before actual expiry
   ctx.tokenExpiry = Date.now() + (result.expires_in - 300) * 1000;
@@ -136,13 +111,7 @@ async function handleRoute(
     const entry = pkceStore.get(state);
     if (!entry) return errorResponse("Invalid or expired state", 400);
     pkceStore.delete(state);
-    const tokens = await getUserToken(
-      ctx.config.clientId,
-      ctx.config.clientSecret,
-      ctx.config.redirectUri,
-      code,
-      entry.verifier,
-    );
+    const tokens = await getClient().auth.getUserToken(code, entry.verifier);
     return jsonResponse(tokens);
   }
 
@@ -153,12 +122,7 @@ async function handleRoute(
     }
     const refreshTokenValue = body?.refresh_token;
     if (!refreshTokenValue) return errorResponse("Missing refresh_token", 400);
-    const tokens = await refreshUserToken(
-      ctx.config.clientId,
-      ctx.config.clientSecret,
-      ctx.config.redirectUri,
-      refreshTokenValue,
-    );
+    const tokens = await getClient().auth.refreshUserToken(refreshTokenValue);
     return jsonResponse(tokens);
   }
 
@@ -181,42 +145,42 @@ async function handleRoute(
   // GET /me
   if (pathname === "/me" && method === "GET") {
     if (!userToken) return errorResponse("Authorization required", 401);
-    const result = await getMe(userToken);
+    const result = await getClient().me.getMe({ token: userToken });
     return jsonResponse(result);
   }
 
   // GET /me/tracks
   if (pathname === "/me/tracks" && method === "GET") {
     if (!userToken) return errorResponse("Authorization required", 401);
-    const result = await getMeTracks(userToken);
+    const result = await getClient().me.getTracks(undefined, { token: userToken });
     return jsonResponse(result);
   }
 
   // GET /me/likes
   if (pathname === "/me/likes" && method === "GET") {
     if (!userToken) return errorResponse("Authorization required", 401);
-    const result = await getMeLikesTracks(userToken);
+    const result = await getClient().me.getLikesTracks(undefined, { token: userToken });
     return jsonResponse(result);
   }
 
   // GET /me/playlists
   if (pathname === "/me/playlists" && method === "GET") {
     if (!userToken) return errorResponse("Authorization required", 401);
-    const result = await getMePlaylists(userToken);
+    const result = await getClient().me.getPlaylists(undefined, { token: userToken });
     return jsonResponse(result);
   }
 
   // GET /me/followings
   if (pathname === "/me/followings" && method === "GET") {
     if (!userToken) return errorResponse("Authorization required", 401);
-    const result = await getMeFollowings(userToken);
+    const result = await getClient().me.getFollowings(undefined, { token: userToken });
     return jsonResponse(result);
   }
 
   // GET /me/followers
   if (pathname === "/me/followers" && method === "GET") {
     if (!userToken) return errorResponse("Authorization required", 401);
-    const result = await getMeFollowers(userToken);
+    const result = await getClient().me.getFollowers(undefined, { token: userToken });
     return jsonResponse(result);
   }
 
@@ -228,9 +192,9 @@ async function handleRoute(
     if (!userToken) return errorResponse("Authorization required", 401);
     const userId = followMatch[1];
     if (method === "POST") {
-      await followUser(userToken, userId);
+      await getClient().me.follow(userId, { token: userToken });
     } else {
-      await unfollowUser(userToken, userId);
+      await getClient().me.unfollow(userId, { token: userToken });
     }
     return jsonResponse({ success: true });
   }
@@ -241,9 +205,9 @@ async function handleRoute(
     if (!userToken) return errorResponse("Authorization required", 401);
     const trackId = trackLikeActionMatch[1];
     if (method === "POST") {
-      await likeTrack(userToken, trackId);
+      await getClient().likes.likeTrack(trackId, { token: userToken });
     } else {
-      await unlikeTrack(userToken, trackId);
+      await getClient().likes.unlikeTrack(trackId, { token: userToken });
     }
     return jsonResponse({ success: true });
   }
@@ -254,9 +218,9 @@ async function handleRoute(
     if (!userToken) return errorResponse("Authorization required", 401);
     const trackId = trackRepostMatch[1];
     if (method === "POST") {
-      await repostTrack(userToken, trackId);
+      await getClient().reposts.repostTrack(trackId, { token: userToken });
     } else {
-      await unrepostTrack(userToken, trackId);
+      await getClient().reposts.unrepostTrack(trackId, { token: userToken });
     }
     return jsonResponse({ success: true });
   }
@@ -267,9 +231,9 @@ async function handleRoute(
     if (!userToken) return errorResponse("Authorization required", 401);
     const playlistId = playlistLikeMatch[1];
     if (method === "POST") {
-      await likePlaylist(userToken, playlistId);
+      await getClient().likes.likePlaylist(playlistId, { token: userToken });
     } else {
-      await unlikePlaylist(userToken, playlistId);
+      await getClient().likes.unlikePlaylist(playlistId, { token: userToken });
     }
     return jsonResponse({ success: true });
   }
@@ -280,9 +244,9 @@ async function handleRoute(
     if (!userToken) return errorResponse("Authorization required", 401);
     const playlistId = playlistRepostMatch[1];
     if (method === "POST") {
-      await repostPlaylist(userToken, playlistId);
+      await getClient().reposts.repostPlaylist(playlistId, { token: userToken });
     } else {
-      await unrepostPlaylist(userToken, playlistId);
+      await getClient().reposts.unrepostPlaylist(playlistId, { token: userToken });
     }
     return jsonResponse({ success: true });
   }
@@ -294,14 +258,17 @@ async function handleRoute(
   if (pathname === "/resolve") {
     const scUrl = url.searchParams.get("url");
     if (!scUrl) return errorResponse("Missing 'url' parameter", 400);
-    const result = await resolveUrl(token, scUrl);
+    const result = await getClient().resolve.resolveUrl(scUrl, { token });
     return jsonResponse(result);
   }
 
   // /next?url=<encoded_next_href> — generic next-page fetcher
+  // Note: scFetchUrl is used directly here as the client doesn't expose a raw URL fetcher.
+  // Telemetry for this route is covered by onRouteComplete.
   if (pathname === "/next") {
     const nextUrl = url.searchParams.get("url");
     if (!nextUrl) return errorResponse("Missing 'url' parameter", 400);
+    const { scFetchUrl } = await import("soundcloud-api-ts");
     const result = await scFetchUrl(nextUrl, token);
     return jsonResponse(result);
   }
@@ -310,7 +277,7 @@ async function handleRoute(
   if (pathname === "/search/playlists") {
     const q = url.searchParams.get("q");
     if (!q) return errorResponse("Missing query parameter 'q'", 400);
-    const result = await searchPlaylists(token, q);
+    const result = await getClient().search.playlists(q, undefined, { token });
     return jsonResponse(result);
   }
 
@@ -318,7 +285,7 @@ async function handleRoute(
   if (pathname === "/search/users") {
     const q = url.searchParams.get("q");
     if (!q) return errorResponse("Missing query parameter 'q'", 400);
-    const result = await searchUsers(token, q);
+    const result = await getClient().search.users(q, undefined, { token });
     return jsonResponse(result);
   }
 
@@ -327,56 +294,56 @@ async function handleRoute(
     const q = url.searchParams.get("q");
     if (!q) return errorResponse("Missing query parameter 'q'", 400);
     const page = url.searchParams.get("page");
-    const result = await searchTracks(token, q, page ? parseInt(page, 10) : undefined);
+    const result = await getClient().search.tracks(q, page ? parseInt(page, 10) : undefined, { token });
     return jsonResponse(result);
   }
 
   // /tracks/:id/stream
   const streamMatch = pathname.match(/^\/tracks\/([^/]+)\/stream$/);
   if (streamMatch) {
-    const streams = await getTrackStreams(token, streamMatch[1]);
+    const streams = await getClient().tracks.getStreams(streamMatch[1], { token });
     return jsonResponse(streams);
   }
 
   // /tracks/:id/comments
   const trackCommentsMatch = pathname.match(/^\/tracks\/([^/]+)\/comments$/);
   if (trackCommentsMatch) {
-    const result = await getTrackComments(token, trackCommentsMatch[1]);
+    const result = await getClient().tracks.getComments(trackCommentsMatch[1], undefined, { token });
     return jsonResponse(result);
   }
 
   // /tracks/:id/likes
   const trackLikesMatch = pathname.match(/^\/tracks\/([^/]+)\/likes$/);
   if (trackLikesMatch) {
-    const result = await getTrackLikes(token, trackLikesMatch[1]);
+    const result = await getClient().tracks.getLikes(trackLikesMatch[1], undefined, { token });
     return jsonResponse(result);
   }
 
   // /tracks/:id/related
   const trackRelatedMatch = pathname.match(/^\/tracks\/([^/]+)\/related$/);
   if (trackRelatedMatch) {
-    const result = await getRelatedTracks(token, trackRelatedMatch[1]);
+    const result = await getClient().tracks.getRelated(trackRelatedMatch[1], undefined, { token });
     return jsonResponse(result);
   }
 
   // /tracks/:id
   const trackMatch = pathname.match(/^\/tracks\/([^/]+)$/);
   if (trackMatch) {
-    const track = await getTrack(token, trackMatch[1]);
+    const track = await getClient().tracks.getTrack(trackMatch[1], { token });
     return jsonResponse(track);
   }
 
   // /playlists/:id/tracks
   const playlistTracksMatch = pathname.match(/^\/playlists\/([^/]+)\/tracks$/);
   if (playlistTracksMatch) {
-    const result = await getPlaylistTracks(token, playlistTracksMatch[1]);
+    const result = await getClient().playlists.getTracks(playlistTracksMatch[1], undefined, undefined, { token });
     return jsonResponse(result);
   }
 
   // /playlists/:id
   const playlistMatch = pathname.match(/^\/playlists\/([^/]+)$/);
   if (playlistMatch) {
-    const result = await getPlaylist(token, playlistMatch[1]);
+    const result = await getClient().playlists.getPlaylist(playlistMatch[1], { token });
     return jsonResponse(result);
   }
 
@@ -384,10 +351,10 @@ async function handleRoute(
   const userTracksMatch = pathname.match(/^\/users\/([^/]+)\/tracks$/);
   if (userTracksMatch) {
     const limit = url.searchParams.get("limit");
-    const result = await getUserTracks(
-      token,
+    const result = await getClient().users.getTracks(
       userTracksMatch[1],
       limit ? parseInt(limit, 10) : undefined,
+      { token },
     );
     return jsonResponse(result);
   }
@@ -395,35 +362,35 @@ async function handleRoute(
   // /users/:id/playlists
   const userPlaylistsMatch = pathname.match(/^\/users\/([^/]+)\/playlists$/);
   if (userPlaylistsMatch) {
-    const result = await getUserPlaylists(token, userPlaylistsMatch[1]);
+    const result = await getClient().users.getPlaylists(userPlaylistsMatch[1], undefined, { token });
     return jsonResponse(result);
   }
 
   // /users/:id/likes/tracks
   const userLikesMatch = pathname.match(/^\/users\/([^/]+)\/likes\/tracks$/);
   if (userLikesMatch) {
-    const result = await getUserLikesTracks(token, userLikesMatch[1]);
+    const result = await getClient().users.getLikesTracks(userLikesMatch[1], undefined, undefined, { token });
     return jsonResponse(result);
   }
 
   // /users/:id/followers
   const userFollowersMatch = pathname.match(/^\/users\/([^/]+)\/followers$/);
   if (userFollowersMatch) {
-    const result = await getFollowers(token, userFollowersMatch[1]);
+    const result = await getClient().users.getFollowers(userFollowersMatch[1], undefined, { token });
     return jsonResponse(result);
   }
 
   // /users/:id/followings
   const userFollowingsMatch = pathname.match(/^\/users\/([^/]+)\/followings$/);
   if (userFollowingsMatch) {
-    const result = await getFollowings(token, userFollowingsMatch[1]);
+    const result = await getClient().users.getFollowings(userFollowingsMatch[1], undefined, { token });
     return jsonResponse(result);
   }
 
   // /users/:id
   const userMatch = pathname.match(/^\/users\/([^/]+)$/);
   if (userMatch) {
-    const user = await getUser(token, userMatch[1]);
+    const user = await getClient().users.getUser(userMatch[1], { token });
     return jsonResponse(user);
   }
 
@@ -462,7 +429,8 @@ async function handleRoute(
  */
 export function createSoundCloudRoutes(config: SoundCloudRoutesConfig) {
   ctx.config = config;
-  // Reset token when config changes
+  // Reset client and token when config changes
+  ctx.client = null;
   ctx.token = undefined;
   ctx.tokenExpiry = 0;
 
@@ -470,71 +438,71 @@ export function createSoundCloudRoutes(config: SoundCloudRoutesConfig) {
     /** Individual route handlers */
     async resolveUrl(url: string) {
       const token = await ensureToken();
-      return resolveUrl(token, url);
+      return getClient().resolve.resolveUrl(url, { token });
     },
     async searchTracks(q: string, page?: number) {
       const token = await ensureToken();
-      return searchTracks(token, q, page);
+      return getClient().search.tracks(q, page, { token });
     },
     async searchUsers(q: string) {
       const token = await ensureToken();
-      return searchUsers(token, q);
+      return getClient().search.users(q, undefined, { token });
     },
     async searchPlaylists(q: string) {
       const token = await ensureToken();
-      return searchPlaylists(token, q);
+      return getClient().search.playlists(q, undefined, { token });
     },
     async getTrack(trackId: string | number) {
       const token = await ensureToken();
-      return getTrack(token, trackId);
+      return getClient().tracks.getTrack(trackId, { token });
     },
     async getTrackComments(trackId: string | number) {
       const token = await ensureToken();
-      return getTrackComments(token, trackId);
+      return getClient().tracks.getComments(trackId, undefined, { token });
     },
     async getTrackLikes(trackId: string | number) {
       const token = await ensureToken();
-      return getTrackLikes(token, trackId);
+      return getClient().tracks.getLikes(trackId, undefined, { token });
     },
     async getRelatedTracks(trackId: string | number) {
       const token = await ensureToken();
-      return getRelatedTracks(token, trackId);
+      return getClient().tracks.getRelated(trackId, undefined, { token });
     },
     async getUser(userId: string | number) {
       const token = await ensureToken();
-      return getUser(token, userId);
+      return getClient().users.getUser(userId, { token });
     },
     async getUserTracks(userId: string | number, limit?: number) {
       const token = await ensureToken();
-      return getUserTracks(token, userId, limit);
+      return getClient().users.getTracks(userId, limit, { token });
     },
     async getUserPlaylists(userId: string | number) {
       const token = await ensureToken();
-      return getUserPlaylists(token, userId);
+      return getClient().users.getPlaylists(userId, undefined, { token });
     },
     async getUserLikesTracks(userId: string | number) {
       const token = await ensureToken();
-      return getUserLikesTracks(token, userId);
+      return getClient().users.getLikesTracks(userId, undefined, undefined, { token });
     },
     async getFollowers(userId: string | number) {
       const token = await ensureToken();
-      return getFollowers(token, userId);
+      return getClient().users.getFollowers(userId, undefined, { token });
     },
     async getFollowings(userId: string | number) {
       const token = await ensureToken();
-      return getFollowings(token, userId);
+      return getClient().users.getFollowings(userId, undefined, { token });
     },
     async getTrackStreams(trackId: string | number) {
       const token = await ensureToken();
-      return getTrackStreams(token, trackId);
+      return getClient().tracks.getStreams(trackId, { token });
     },
     async getPlaylist(playlistId: string | number) {
       const token = await ensureToken();
-      return getPlaylist(token, playlistId);
+      return getClient().playlists.getPlaylist(playlistId, { token });
     },
     async getPlaylistTracks(playlistId: string | number) {
       const token = await ensureToken();
-      return getPlaylistTracks(token, playlistId);
+      return getClient().playlists.getTracks(playlistId, undefined, undefined, { token });
     },
 
     /**

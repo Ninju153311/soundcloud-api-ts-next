@@ -97,7 +97,7 @@ export interface SoundCloudRoutesConfig {
    */
   onRouteComplete?: (telemetry: import("./types.js").SCRouteTelemetry) => void;
   /**
-   * Passed through to the underlying `scFetch` calls for SC API-level telemetry.
+   * Passed through to the underlying SoundCloud API calls for per-request telemetry.
    * Fires for each individual SoundCloud API request (including retries).
    *
    * @example
