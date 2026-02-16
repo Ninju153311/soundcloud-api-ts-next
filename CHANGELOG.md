@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.3] - 2026-02-16
+
+### Changed
+
+- **Bump soundcloud-api-ts to ^1.11.3** — picks up critical Basic Auth fix for `getClientToken()` class method.
+
 ## [1.9.2] - 2026-02-15
 
 ### Added
