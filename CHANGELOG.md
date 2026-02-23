@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.9.4] - 2026-02-23
+
+### Added
+
+- **`SCAuthManager`** — new server-side class for programmatic SoundCloud OAuth 2.1 + PKCE. Manages the `state → PKCE verifier` mapping across the two HTTP requests that make up the OAuth flow (initiation + callback), so you don't have to.
+- **`createSCAuthManager(config)`** — factory function, exported from `soundcloud-api-ts-next/server`. Creates a module-level singleton for use across Next.js API routes.
+- **`SCAuthManagerConfig`** type — `{ clientId, clientSecret, redirectUri }`
+- **`SCLoginResult`** type — `{ url: string, state: string }` returned by `initLogin()`
+- **`SoundCloudToken`** type — now re-exported from `soundcloud-api-ts-next/server` (was previously only available from the base package)
+
+### Changed
+
+- `routes.ts` internally refactored to use `SCAuthManager` — `/auth/login` and `/auth/callback` route handlers no longer maintain their own `pkceStore`. Behavior is identical; the store is now shared via the `SCAuthManager` singleton.
+
+### When to use `SCAuthManager` vs the HTTP routes
+
+Use `SCAuthManager` when your app needs custom logic **after** token exchange — user creation, session minting (e.g. NextAuth JWT), linking accounts to a database. The HTTP routes (`/auth/login`, `/auth/callback`) are still the right choice for simple client-side PKCE flows where you just need the tokens returned as JSON.
+
 ## [1.9.3] - 2026-02-16
 
 ### Changed

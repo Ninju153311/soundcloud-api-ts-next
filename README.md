@@ -291,6 +291,95 @@ function TrackActions({ trackId, artistId }) {
 
 ---
 
+## Server-Side Auth Manager
+
+For apps that need custom logic after token exchange — NextAuth JWT minting, database user creation, account linking — use `SCAuthManager` directly instead of the HTTP auth routes.
+
+```ts
+// lib/sc-auth.ts — one module-level instance, shared across all routes
+import { createSCAuthManager } from "soundcloud-api-ts-next/server";
+
+export const scAuth = createSCAuthManager({
+  clientId: process.env.SC_CLIENT_ID!,
+  clientSecret: process.env.SC_CLIENT_SECRET!,
+  redirectUri: process.env.SC_REDIRECT_URI!,
+});
+```
+
+### `initLogin()` — generate PKCE URL + CSRF state
+
+```ts
+// app/api/auth/sc-login/route.ts
+import { NextResponse } from "next/server";
+import { scAuth } from "@/lib/sc-auth";
+
+export async function GET() {
+  const { url, state } = await scAuth.initLogin();
+
+  // Persist state in a short-lived httpOnly cookie for CSRF verification
+  const res = NextResponse.redirect(url);
+  res.cookies.set("sc-state", state, { httpOnly: true, maxAge: 600, sameSite: "lax" });
+  return res;
+}
+```
+
+`initLogin()` generates a PKCE `code_verifier` + `code_challenge` (S256) and a random CSRF `state` token, stores the verifier server-side, and returns the SoundCloud authorize URL. The PKCE verifier lives in-memory — no cookie or database needed.
+
+### `exchangeCode(code, state)` — verify CSRF + exchange tokens
+
+```ts
+// app/api/auth/sc-callback/route.ts
+import { NextRequest, NextResponse } from "next/server";
+import { scAuth } from "@/lib/sc-auth";
+
+export async function GET(req: NextRequest) {
+  const code = req.nextUrl.searchParams.get("code")!;
+  const state = req.nextUrl.searchParams.get("state")!;
+
+  // Verify CSRF state matches cookie
+  const cookieState = req.cookies.get("sc-state")?.value;
+  if (!cookieState || cookieState !== state) {
+    return NextResponse.json({ error: "Invalid state" }, { status: 400 });
+  }
+
+  // Exchange code + PKCE verifier for tokens
+  const tokens = await scAuth.exchangeCode(code, state);
+  // tokens: { access_token, refresh_token, expires_in, ... }
+
+  // Your app-specific logic here: create user, mint session, etc.
+  return NextResponse.json({ ok: true });
+}
+```
+
+`exchangeCode` verifies `state` against the stored PKCE entry (CSRF check), then calls SoundCloud's token endpoint with the `code_verifier`. The entry is deleted after use (one-time).
+
+### `refreshToken(refreshToken)` — refresh an expired token
+
+```ts
+const newTokens = await scAuth.refreshToken(expiredRefreshToken);
+```
+
+### API Reference
+
+```ts
+import { createSCAuthManager, type SCAuthManagerConfig, type SCLoginResult, type SoundCloudToken } from "soundcloud-api-ts-next/server";
+
+const scAuth = createSCAuthManager({
+  clientId: string,
+  clientSecret: string,
+  redirectUri: string,
+});
+
+scAuth.initLogin(): Promise<SCLoginResult>        // { url, state }
+scAuth.exchangeCode(code, state): Promise<SoundCloudToken>
+scAuth.refreshToken(token): Promise<SoundCloudToken>
+scAuth.pendingLogins: number                       // active PKCE entries (for observability)
+```
+
+> **vs HTTP routes:** The `/auth/login` and `/auth/callback` HTTP routes still work and are the right choice for simple client-side flows where you just need tokens returned as JSON. `SCAuthManager` is for when you need to run server-side code between "got tokens" and "user is logged in".
+
+---
+
 ## Server Routes
 
 The catch-all handler exposes these routes automatically:

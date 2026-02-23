@@ -270,6 +270,51 @@ Returns an object with:
 
 When `getToken` is provided, it replaces the built-in client credentials flow for all public routes. Auth routes (`/me/*`, actions) still use the `Authorization: Bearer` header from the request.
 
+## SCAuthManager — Programmatic OAuth 2.1 + PKCE
+
+For apps that need custom server-side logic after token exchange (NextAuth JWT minting, database user creation, account linking). The HTTP routes (`/auth/login`, `/auth/callback`) return tokens as JSON and are sufficient for simple flows; use `SCAuthManager` when you need to run code between "got tokens" and "user is logged in".
+
+```ts
+import { createSCAuthManager } from "soundcloud-api-ts-next/server";
+
+// Create once at module level — the in-memory PKCE store is shared across requests
+const scAuth = createSCAuthManager({
+  clientId: string,
+  clientSecret: string,
+  redirectUri: string,  // required (unlike createSoundCloudRoutes where it's optional)
+});
+
+// Step 1: initiate OAuth
+const { url, state } = await scAuth.initLogin();
+// url: full SoundCloud authorize URL with PKCE params
+// state: random CSRF token — persist in a short-lived httpOnly cookie
+// verifier: stored server-side in the SCAuthManager instance (in-memory)
+
+// Step 2: handle callback (after SC redirects back)
+const tokens = await scAuth.exchangeCode(code, state);
+// Verifies state, looks up PKCE verifier, exchanges code → tokens (one-time use)
+// Returns: SoundCloudToken { access_token, refresh_token, expires_in, ... }
+
+// Refresh an expired token
+const newTokens = await scAuth.refreshToken(refreshToken);
+
+// Observability
+scAuth.pendingLogins; // number of active (non-expired) PKCE entries
+```
+
+```ts
+interface SCAuthManagerConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
+
+interface SCLoginResult {
+  url: string;   // SoundCloud authorize URL to redirect the user to
+  state: string; // CSRF token — persist securely, verify in callback
+}
+```
+
 ## Common Types
 
 ```ts
@@ -321,6 +366,17 @@ interface SoundCloudToken {
   expires_in: number;
   token_type: string;
   scope: string;
+}
+
+interface SCAuthManagerConfig {
+  clientId: string;
+  clientSecret: string;
+  redirectUri: string;
+}
+
+interface SCLoginResult {
+  url: string;   // SoundCloud authorize URL — redirect user here
+  state: string; // CSRF token — persist in httpOnly cookie, verify in callback
 }
 ```
 

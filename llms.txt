@@ -90,6 +90,14 @@ All return { data: T[], loading, error, hasMore, loadMore, reset }
   - .pagesHandler() — Pages Router catch-all
   - .resolveUrl(url) — resolve a SoundCloud URL server-side
   - .searchTracks(q), .getTrack(id), .getUser(id), etc. — individual methods
+- createSCAuthManager({ clientId, clientSecret, redirectUri }) — creates a stateful PKCE auth manager for programmatic OAuth flows
+  - Use when you need custom logic after token exchange (user creation, JWT minting, account linking)
+  - .initLogin() → Promise<{ url, state }> — generates PKCE verifier/challenge + CSRF state, returns SC authorize URL. Verifier stored in-memory.
+  - .exchangeCode(code, state) → Promise<SoundCloudToken> — verifies CSRF state, exchanges code + PKCE verifier for tokens (one-time use)
+  - .refreshToken(refreshToken) → Promise<SoundCloudToken> — refresh an expired access token
+  - .pendingLogins → number — active PKCE entry count (for observability)
+- SCAuthManager — the class returned by createSCAuthManager (use the factory, not the constructor directly)
+- Types: SCAuthManagerConfig, SCLoginResult, SoundCloudToken
 
 ## All hooks return
 { data: T | null, loading: boolean, error: Error | null }
